@@ -22,6 +22,7 @@ import wandb
 
 wandb.login()
 
+# Initialize Weights & Biases run
 run = wandb.init(
     # Set the project where this run will be logged
     project="my-awesome-project",
@@ -32,11 +33,13 @@ run = wandb.init(
     },
 )
 
+# Check for GPU
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"device: {device}")
 
 batch_size = 128
 
+# Data transformations and loaders
 transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
 train_data = datasets.FashionMNIST(root="./data", train=True, transform=transform, download=True)
 test_data = datasets.FashionMNIST(root="./data", train=False, transform=transform, download=True)
@@ -46,6 +49,8 @@ test_loader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False
 
 
 class FashionMnistClassifier(nn.Module):
+    """Natural network classifier for the Fashion MNIST dataset."""
+
     def __init__(self):
         super(FashionMnistClassifier, self).__init__()
         self.fc1 = nn.Linear(28 * 28, 512)
@@ -62,12 +67,14 @@ class FashionMnistClassifier(nn.Module):
         return x
 
 
+# Initialize model
 model = FashionMnistClassifier().to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
 
 def train_model(model, train_loader, criterion, optimizer, device, epochs=10):
+    """Train a given model to the training dataset."""
     model.train()
     for epoch in range(epochs):
         running_loss = 0.0
@@ -83,6 +90,7 @@ def train_model(model, train_loader, criterion, optimizer, device, epochs=10):
 
 
 def test_model(model, test_loader, device):
+    """Evaluate the model on the test dataset and print the accuracy."""
     model.eval()
     correct = 0
     total = 0
@@ -98,5 +106,4 @@ def test_model(model, test_loader, device):
 
 
 train_model(model, train_loader, criterion, optimizer, device, epochs=3)
-
 test_model(model, test_loader, device)
