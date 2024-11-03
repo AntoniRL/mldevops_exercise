@@ -22,62 +22,67 @@ import matplotlib.pyplot as plt
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"device: {device}")
 
-batch_size=128
+batch_size = 128
 
 transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5,), (0.5,))])
-train_data = datasets.FashionMNIST(root='./data', train = True, transform=transform, download=True)
-test_data = datasets.FashionMNIST(root='./data', train=False, transform=transform, download=True)
+train_data = datasets.FashionMNIST(root="./data", train=True, transform=transform, download=True)
+test_data = datasets.FashionMNIST(root="./data", train=False, transform=transform, download=True)
 
 train_loader = DataLoader(dataset=train_data, batch_size=batch_size, shuffle=True)
 test_loader = DataLoader(dataset=test_data, batch_size=batch_size, shuffle=False)
 
-class FashionMnistClassifier(nn.Module):
-  def __init__(self):
-    super(FashionMnistClassifier, self).__init__()
-    self.fc1 = nn.Linear(28*28, 512)
-    self.fc2 = nn.Linear(512, 256)
-    self.fc3 = nn.Linear(256, 10)
-    self.dropout = nn.Dropout(0.5)
 
-  def forward(self, x):
-    x = x.view(-1, 28*28)
-    x = nn.functional.relu(self.fc1(x))
-    x = self.dropout(x)
-    x = nn.functional.relu(self.fc2(x))
-    x = self.fc3(x)
-    return x
+class FashionMnistClassifier(nn.Module):
+    def __init__(self):
+        super(FashionMnistClassifier, self).__init__()
+        self.fc1 = nn.Linear(28 * 28, 512)
+        self.fc2 = nn.Linear(512, 256)
+        self.fc3 = nn.Linear(256, 10)
+        self.dropout = nn.Dropout(0.5)
+
+    def forward(self, x):
+        x = x.view(-1, 28 * 28)
+        x = nn.functional.relu(self.fc1(x))
+        x = self.dropout(x)
+        x = nn.functional.relu(self.fc2(x))
+        x = self.fc3(x)
+        return x
+
 
 model = FashionMnistClassifier().to(device)
 criterion = nn.CrossEntropyLoss()
 optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
 
+
 def train_model(model, train_loader, criterion, optimizer, device, epochs=10):
-  model.train()
-  for epoch in range(epochs):
-    running_loss = 0.0
-    for images, labels in train_loader:
-      images, labels = images.to(device), labels.to(device)
-      outputs = model(images)
-      loss = criterion(outputs, labels)
-      optimizer.zero_grad()
-      loss.backward()
-      optimizer.step()
-      running_loss += loss.item()
-    print(f"Epoch [{epoch+1}/{epochs}], Loss: {running_loss/len(train_loader):.4f}")
+    model.train()
+    for epoch in range(epochs):
+        running_loss = 0.0
+        for images, labels in train_loader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            loss = criterion(outputs, labels)
+            optimizer.zero_grad()
+            loss.backward()
+            optimizer.step()
+            running_loss += loss.item()
+        print(f"Epoch [{epoch+1}/{epochs}], Loss: {running_loss/len(train_loader):.4f}")
+
 
 def test_model(model, test_loader, device):
-  model.eval()
-  correct = 0
-  total = 0
-  with torch.no_grad():
-    for images, labels in test_loader:
-      images, labels = images.to(device), labels.to(device)
-      outputs = model(images)
-      _, predicted = torch.max(outputs.data, 1)
-      total += labels.size(0)
-      correct += (predicted == labels).sum().item()
-  accuracy = 100*correct/total
-  print(f"Test Acc: {accuracy:.2f}%")
+    model.eval()
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for images, labels in test_loader:
+            images, labels = images.to(device), labels.to(device)
+            outputs = model(images)
+            _, predicted = torch.max(outputs.data, 1)
+            total += labels.size(0)
+            correct += (predicted == labels).sum().item()
+    accuracy = 100 * correct / total
+    print(f"Test Acc: {accuracy:.2f}%")
+
 
 train_model(model, train_loader, criterion, optimizer, device, epochs=10)
 
