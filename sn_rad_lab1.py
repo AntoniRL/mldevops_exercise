@@ -18,6 +18,19 @@ import torch.nn as nn
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 import matplotlib.pyplot as plt
+import wandb
+
+wandb.login()
+
+run = wandb.init(
+    # Set the project where this run will be logged
+    project="my-awesome-project",
+    # Track hyperparameters and run metadata
+    config={
+        "learning_rate": 0.01,
+        "epochs": 3,
+    },
+)
 
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"device: {device}")
@@ -84,6 +97,6 @@ def test_model(model, test_loader, device):
     print(f"Test Acc: {accuracy:.2f}%")
 
 
-train_model(model, train_loader, criterion, optimizer, device, epochs=10)
+train_model(model, train_loader, criterion, optimizer, device, epochs=3)
 
 test_model(model, test_loader, device)
